@@ -1,0 +1,208 @@
+MPASM 5.83                          MAIN.ASM   7-21-2020  11:12:44         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000003            00001 STATUS equ 03h ; STATUS merujuk ke alamat memori 03h
+  00000005            00002 PORTA equ 05h ; PORTA merujuk ke alamat memori 05h
+  00000006            00003 PORTB equ 06h ; PORTB merujuk ke alamat memori 06h
+  00000007            00004 PORTC equ 07h ; PORTC merujuk ke alamat memori 07h
+  00000009            00005 PORTE equ 09h ; PORTE merujuk ke alamat memori 07h
+  00000085            00006 TRISA equ 85h ; TRISA merujuk ke alamat memori 85h
+  00000086            00007 TRISB equ 86h ; TRISB merujuk ke alamat memori 86h
+  00000086            00008 TRISC equ 86h ; TRISC merujuk ke alamat memori 87h
+  00000089            00009 TRISE equ 89h ; TRISE merujuk ke alamat memori 89h
+  0000009F            00010 ADCON1 equ 9Fh ; ADCON1 merujuk ke alamat memori 9Fh
+                      00011  
+                      00012     cblock h'20'
+  00000020            00013     delay_1
+  00000021            00014     delay_2
+                      00015     endc
+                      00016     
+                      00017     org 00              ; origin register
+0000   0103           00018     clrw                ; Clear the working register
+0001   1683           00019     bsf STATUS,5        ; ke Bank1
+0002   3006           00020     movlw 0x06          ; konfigurasi seluruh PIN
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0003   009F           00021     movwf ADCON1        ; sebagai digital inputs
+0004   301F           00022     movlw 0x1F          ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0005   0085           00023     movwf TRISA         ; TRISA bit 4-0 bernilai 1
+                      00024                         ; menyebabkan PORTA bit 4-0 menjadi INPUT
+0006   3000           00025     movlw 0x00          ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0007   0086           00026     movwf TRISB         ; TRISB seluruh bitnya diberi nilai 0
+                      00027                         ; menyebabkan Seluruh Pin PORTB menjadi OUTPUT
+0008   3000           00028     movlw b'000'        ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0009   0089           00029     movwf TRISE         ; TRISC bit<0-2> bernilai 0 bit<3-7> bernilai 1
+                      00030                         ; menyebabkan PORTC bit<0-2> sbg OUTPUT
+                      00031                         ; dan PORTC bit<3-7> sbg INPUT
+000A   1283           00032     bcf STATUS,5        ; ke Bank0 (karena PORTA dan PORTB ada di Bank0)
+000B   0185           00033     clrf PORTA          ; PORTA di-clear
+000C   0186           00034     clrf PORTB          ; PORTB di-clear
+                      00035                         ;clrf PORTC
+000D   2???           00036     call tampil_0
+                      00037     
+000E                  00038 loop
+000E   3007           00039     movlw b'111'        ;
+000F   0089           00040     movwf PORTE         ; PORTE aktif (menuju keypad kolom 1,2,3)
+                      00041                         ; Cek apakah ada salah satu Push Button yang ditekan
+0010   1805           00042     btfsc PORTA,0       ; Jika diantara PB baris A ditekan
+0011   2???           00043     call scan_keypad    ; maka lakukan proses scanning
+0012   1885           00044     btfsc PORTA,1       ; Jika diantara PB baris B ditekan
+0013   2???           00045     call scan_keypad    ; maka lakukan proses scanning
+0014   1905           00046     btfsc PORTA,2       ; Jika diantara PB baris C ditekan
+0015   2???           00047     call scan_keypad    ; maka lakukan proses scanning
+0016   1A05           00048     btfsc PORTA,4       ; Jika diantara PB baris D ditekan
+0017   2???           00049     call scan_keypad    ; maka lakukan proses scanning
+MPASM 5.83                          MAIN.ASM   7-21-2020  11:12:44         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0018   0000           00050     nop                 ; jika tidak ada yang ditekan maka tidak melakukan proses scanning
+                      00051     
+0019   2???           00052     goto loop
+                      00053     
+001A                  00054 scan_keypad
+001A   3000           00055             movlw b'000'    ;
+001B   0089           00056             movwf PORTE     ; PORTE nonaktif
+                      00057             
+001C   3001           00058             movlw b'001'    ; kolom 1 aktif
+001D   0089           00059             movwf PORTE
+001E   1805           00060             btfsc PORTA,0   ; baris A (keypad 1)
+001F   2???           00061             call tampil_1
+0020   1885           00062             btfsc PORTA,1   ; baris B (keypad 4)
+0021   2???           00063             call tampil_4
+0022   1905           00064             btfsc PORTA,2   ; baris C (keypad 7)
+0023   2???           00065             call tampil_7
+0024   1A05           00066             btfsc PORTA,4   ; baris D (keypad *)
+0025   0000           00067             nop
+                      00068 
+0026   3002           00069             movlw b'010'    ; kolom 2 aktif
+0027   0089           00070             movwf PORTE
+0028   1805           00071             btfsc PORTA,0   ; baris A (keypad 2)
+0029   2???           00072             call tampil_2
+002A   1885           00073             btfsc PORTA,1   ; baris B (keypad 5)
+002B   2???           00074             call tampil_5
+002C   1905           00075             btfsc PORTA,2   ; baris C (keypad 8)
+002D   2???           00076             call tampil_8
+002E   1A05           00077             btfsc PORTA,4   ; baris D (keypad 0)
+002F   2???           00078             call tampil_0
+0030   0000           00079             nop
+                      00080 
+0031   3004           00081             movlw b'100'    ; kolom 3 aktif
+0032   0089           00082             movwf PORTE
+0033   1805           00083             btfsc PORTA,0   ; baris A (keypad 3)
+0034   2???           00084             call tampil_3
+0035   1885           00085             btfsc PORTA,1   ; baris B (keypad 6)
+0036   2???           00086             call tampil_6
+0037   1905           00087             btfsc PORTA,2   ; baris C (keypad 9)
+0038   2???           00088             call tampil_9
+0039   1A05           00089             btfsc PORTA,4   ; baris D (keypad #)
+003A   0000           00090             nop
+003B   2???           00091             call delay
+003C   0008           00092             return
+                      00093     
+003D                  00094 tampil_0
+003D   303F           00095         movlw b'00111111'
+003E   0086           00096         movwf PORTB
+003F   0008           00097         return
+0040                  00098 tampil_1
+0040   3006           00099         movlw b'00000110'
+0041   0086           00100         movwf PORTB
+0042   0008           00101         return
+0043                  00102 tampil_2
+MPASM 5.83                          MAIN.ASM   7-21-2020  11:12:44         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0043   305B           00103         movlw b'01011011'
+0044   0086           00104         movwf PORTB
+0045   0008           00105         return
+0046                  00106 tampil_3
+0046   304F           00107         movlw b'01001111'
+0047   0086           00108         movwf PORTB
+0048   0008           00109         return
+0049                  00110 tampil_4
+0049   3066           00111         movlw b'01100110'
+004A   0086           00112         movwf PORTB
+004B   0008           00113         return
+004C                  00114 tampil_5
+004C   306D           00115         movlw b'01101101'
+004D   0086           00116         movwf PORTB
+004E   0008           00117         return
+004F                  00118 tampil_6
+004F   307D           00119         movlw b'01111101'
+0050   0086           00120         movwf PORTB
+0051   0008           00121         return
+0052                  00122 tampil_7
+0052   3007           00123         movlw b'00000111'
+0053   0086           00124         movwf PORTB
+0054   0008           00125         return
+0055                  00126 tampil_8
+0055   307F           00127         movlw b'01111111'
+0056   0086           00128         movwf PORTB
+0057   0008           00129         return
+0058                  00130 tampil_9
+0058   306F           00131         movlw b'01101111'
+0059   0086           00132         movwf PORTB
+005A   0008           00133         return
+                      00134         
+005B                  00135 delay
+005B   30FF           00136         movlw d'255'    ; isi w-reg dengan desimal 255 (nilai maksimal 255)
+                      00137                         ; menentukan waktu delay.
+005C   00A0           00138         movwf delay_1   ; isi memori delay_1 dengan nilai w-reg
+005D   00A1           00139         movwf delay_2   ; isi memori delay_2 dengan nilai w-reg
+005E                  00140 delay_loop
+005E   0BA0           00141         decfsz delay_1, f   ; delay_1 = delay_1 ? 1, jika delay_1 = 0 maka lompat
+005F   2???           00142             goto delay_loop ; kembali kurangi delay_1
+0060   0BA1           00143         decfsz delay_2, f   ; delay_2 = delay_2 ? 1, jika delay_2 = 0 maka lompat
+0061   2???           00144             goto delay_loop ; kembali kurangi delay_2
+0062   0008           00145         return
+                      00146         
+                      00147         end
+MPASM 5.83                          MAIN.ASM   7-21-2020  11:12:44         PAGE  4
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADCON1                            0000009F
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTE                             00000009
+STATUS                            00000003
+TRISA                             00000085
+TRISB                             00000086
+TRISC                             00000086
+TRISE                             00000089
+__16F877A                         00000001
+delay                             0000005B
+delay_1                           00000020
+delay_2                           00000021
+delay_loop                        0000005E
+loop                              0000000E
+scan_keypad                       0000001A
+tampil_0                          0000003D
+tampil_1                          00000040
+tampil_2                          00000043
+tampil_3                          00000046
+tampil_4                          00000049
+tampil_5                          0000004C
+tampil_6                          0000004F
+tampil_7                          00000052
+tampil_8                          00000055
+tampil_9                          00000058
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     4 reported,     0 suppressed
+
+
